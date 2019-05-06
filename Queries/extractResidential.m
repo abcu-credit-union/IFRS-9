@@ -143,7 +143,8 @@ let
                 else _},
                 {"Property Valuation", each if _ = "" then 0 else _},
                 {"Last Valuation Date", each if _ = "" then EffDate else _}}))),
-    #"Changed Type" = Table.TransformColumnTypes(#"Added missing valuation information",{{"Loan ID", type text}}),
+    #"Changed Type" = Table.TransformColumnTypes(#"Added missing valuation information",
+        {{"Loan ID", type text}}),
 
 /*
 Below section imports the original loan values, parses the "Original Loan Amount" column for blanks, and adds the NOTEOPENAMT from
@@ -190,11 +191,28 @@ two credit score date columns and if the import is more recent the files informa
             {"Current Credit Score Update Date1", each if r[Current Credit Score Update Date1] <= r[Run Date] then
                 r[Run Date]
             else _}}))),
+/*
+The below section fills in any missing property information with generic info to pass validation
+*/
+    #"Fill missing security information" = Table.FromRecords(
+        Table.TransformRows(#"Update credit scores", (r) => Record.TransformFields(r,
+            {{"Property Type", each if _ = "" then
+                "OTHER"
+            else _},
+            {"Property Municipality", each if  _ = "" then
+                "BEAUMONT"
+            else _},
+            {"Property Province", each if  _ = "" then
+                "AB"
+            else _},
+            {"Property Postal Code", each if Text.Length( _) < 7 then
+                "T4X 1E7"
+            else _}}))),
 
 
 //Corrects missing information for borrower1
      #"Fill missing credit score information" = Table.FromRecords(
-        Table.TransformRows(#"Update credit scores", (r) => Record.TransformFields(r,
+        Table.TransformRows(#"Fill missing security information", (r) => Record.TransformFields(r,
             {{"Original Credit Bureau1", each if _ = "" then "TransUnion" else _},
             {"Original Credit Score Type1", each if _ = "" then "TUCV" else _},
             {"Original Credit Score1", each if List.Contains({null, 0, "000"}, _)
@@ -251,7 +269,7 @@ exist the value is inputted in the Previous Loan Stage column. Where there is no
 
     #"Adjusted Previous Loan Stage Column" = Table.FromRecords(
         Table.TransformRows(#"Added Previous Loan Stages", (r) => Record.TransformFields(r,
-            {{"Previous Loan Stage", each if r[Stage] <> null then r[Stage] else "TOBEDEFINED"}}))),
+            {{"Previous Loan Stage", each if r[Stage] <> null then "STAGE" & Text.From(r[Stage]) else "TOBEDEFINED"}}))),
 
     #"Removed Columns" = Table.RemoveColumns(#"Adjusted Previous Loan Stage Column",
         {"Source",

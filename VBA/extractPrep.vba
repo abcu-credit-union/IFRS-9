@@ -1,15 +1,14 @@
-Attribute VB_Name = "extractPrep"
 Sub uploadPrep()
     Dim lRow As String
     Dim actWorkbook As String
     Dim Rng1 As Range
-    
+
     'ActiveWorkbook.Save
-    
+
     'lRow finds the last row of data in a column, this is used to dynamically
     'set the range
     lRow = ActiveWorkbook.ActiveSheet.Cells(1, 1).End(xlDown).Row
-    
+
     'This section determines which extract you are using and saves the .csv in the defined path
     'If you want to change the save location you will make that change here
     If ThisWorkbook.ActiveSheet.Name = "uploadCommercial" Then
@@ -30,7 +29,7 @@ Sub uploadPrep()
     Else
         GoTo namingError
     End If
-    
+
     'Loops through all cells in the input and deletes the contents if there is
     'an error message
     For Each cell In Rng1
@@ -38,9 +37,9 @@ Sub uploadPrep()
             cell.Value = ""
         End If
     Next
-    
+
     actWorkbook = ActiveWorkbook.FullName
-    
+
     'Determines the current active sheet and formats the data accordingly
     If ActiveWorkbook.Name = "uploadCommercial.csv" Then
         ActiveWorkbook.Close
@@ -134,6 +133,5 @@ Sub uploadPrep()
     ActiveWorkbook.Close
 Exit Sub
 namingError: MsgBox "Please verify the worksheet names are correct before running VBA again"
-    
-End Sub
 
+End Sub
