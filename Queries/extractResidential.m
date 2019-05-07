@@ -257,12 +257,22 @@ does use VBA for the initial import
             else _}}))),
 
 /*
+Some account numbers are used on both DNA systems.  The below code uses a user defined table to translate the duplicate loan ID's into different values.
+*/
+    #"Added adjusted account numbers" = Table.ExpandTableColumn(
+        Table.NestedJoin(#"Added override to comment field", {"Loan ID", "Source"}, DuplicateAccounts, {"Loan ID", "Source"}, "Dupl", JoinKind.LeftOuter),
+    "Dupl", {"Translated Loan ID"}),
+    #"Fixed duplicated accounts" = Table.FromRecords(
+        Table.TransformRows(#"Added adjusted account numbers", (r) => Record.TransformFields(r,
+            {"Loan ID", each if r[Translated Loan ID] <> null then r[Translated Loan ID] else _}))),
+
+/*
 Previous loan stages from the last IFRS9 update need to be inputted into this report.  The PreviousStages table selects to most loan stages
 from O:\IFRS9_New\Loan Stages by looking at the file names for dates.  The stages are merged into this table and matches are looked for. Where matches
 exist the value is inputted in the Previous Loan Stage column. Where there is no match, TOBEDEFINED is entered.
 */
     #"Added Previous Loan Stages" = Table.ExpandTableColumn(
-        Table.NestedJoin(#"Added override to comment field", {"Loan ID", "Branch Number"},
+        Table.NestedJoin(#"Fixed duplicated accounts", {"Loan ID", "Branch Number"},
             PreviousStages, {"Grouping", "Branch Number"},
         "Stages", JoinKind.LeftOuter),
         "Stages", {"Stage"}),
@@ -277,7 +287,8 @@ exist the value is inputted in the Previous Loan Stage column. Where there is no
         "TAXRPTFORPERSNBR",
         "Credit Score",
         "Run Date",
-        "Stage"}),
+        "Stage",
+        "Translated Loan ID"}),
 
     #"Moved header row to top" = Table.Sort(#"Removed Columns",{{"RowType", Order.Descending}})
 
