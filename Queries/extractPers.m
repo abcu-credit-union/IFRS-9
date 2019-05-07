@@ -284,7 +284,7 @@ exist the value is inputted in the Previous Loan Stage column. Where there is no
 
     #"Adjusted Previous Loan Stage Column" = Table.FromRecords(
         Table.TransformRows(#"Added Previous Loan Stages", (r) => Record.TransformFields(r,
-            {{"Previous Loan Stage", each if r[Stage] <> null then r[Stage] else "TOBEDEFINED"}}))),
+            {{"Previous Loan Stage", each if r[Stage] <> null then "STAGE" & Text.From(r[Stage]) else "TOBEDEFINED"}}))),
 
     #"Removed user created columns" = Table.RemoveColumns(#"Adjusted Previous Loan Stage Column",
         {"Source",
